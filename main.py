@@ -1,3 +1,6 @@
+import robin_stocks.robinhood as r
+login = r.login('username/email','password')
+
 import pandas as pd
 import datetime as dt
 import matplotlib.pyplot as plt
