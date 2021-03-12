@@ -395,6 +395,7 @@ class PageThree(tk.Frame):
 		
 		def graph_balance(interval='hour', span='week', bounds='24_7', info=None, self=self):
 			"""
+				FOR STOCKS ONLY
 			interval_check = ['5minute', '10minute', 'hour', 'day', 'week']
 			span_check = ['day', 'week', 'month', '3month', 'year', '5year', 'all']
 			bounds_check = ['extended', 'regular', 'trading']
@@ -407,9 +408,20 @@ class PageThree(tk.Frame):
 			label.config( text = symbol.get() )
 			label.config( text = interval_var.get() )
 			interval = interval_var.get()
+			span = span_var.get()
+			#symbol = symbol.get()
 			#symbol = input('Enter crypto ticker: ')
 			print(symbol.get())
-			historical_portfolio = r.crypto.get_crypto_historicals(symbol.get(), interval=interval, span=span, bounds=bounds, info=info) 
+			try:
+				bounds = '24_7'
+				historical_portfolio = r.crypto.get_crypto_historicals(symbol.get(), interval=interval, span=span, bounds=bounds, info=info) 
+			# except Exception as e:
+				# if 'Not found for url' in str(e):
+			except TypeError:
+				#print(interval)
+				# historical_portfolio = r.get_historical_portfolio(symbol.get(), interval=interval, span=span, bounds=bounds, info=info) ###### could change info to close_equity
+				bounds = 'regular'
+				historical_portfolio = r.get_stock_historicals(symbol.get(), interval=interval, span=span, bounds=bounds, info=info) ###### could change info to close_equity
 			# display(historical_portfolio)
 			print(historical_portfolio[0])
 			historicalbitcoin = historical_portfolio
@@ -440,6 +452,8 @@ class PageThree(tk.Frame):
 			print('plotting graph')
 			a.clear()
 			a.plot(dates_list,close_prices_list)
+
+			
 		from tkinter import messagebox
 		
 		Label(self, text='Enter Crypto Ticker Symbol').pack(pady=20)
@@ -448,34 +462,42 @@ class PageThree(tk.Frame):
 		name_Tf.pack()
 		#name_Tf.focus()
 		# Change the label text 
-		def show():  
-			label.config( text = symbol.get() )
-			label.config( text = interval_var.get() )
-			interval = interval_var.get()
-			return interval
+		# def show():  
+			# label.config( text = symbol.get() )
+			# label.config( text = interval_var.get() )
+			# interval = interval_var.get()
+			# return interval
 
 		# Dropdown menu options 
-		options = [ 
+		interval_options = [ 
 			"5minute", 
 			"10minute", 
 			"hour", 
 			"day", 
 			"week"
 		] 
+		
+		span_options = ['day', 'week', 'month', '3month', 'year', '5year', 'all']
 		  
 		# datatype of menu text 
 		interval_var = StringVar() 
+		span_var = StringVar()
 		  
 		# initial menu text 
-		interval_var.set( "5minute" ) 
+		interval_var.set('hour') 
+		span_var.set('week')
 		  
 		# Create Dropdown menu 
-		drop = OptionMenu( self , interval_var , *options ) 
-		drop.pack() 
+		interval_dropdown = OptionMenu( self , interval_var , *interval_options ) 
+		interval_dropdown.pack() 
+
+		# Create Dropdown menu 
+		span_dropdown = OptionMenu( self , span_var , *span_options ) 
+		span_dropdown.pack() 
 		  
 		# Create button, it will change label text 
-		button = Button( self , text = "Graph" , command = graph_balance ).pack() 
-		button2 = Button( self , text = "Change interval", command = show).pack() 
+		# button = Button( self , text = "Graph" , command = graph_balance ).pack() 
+		# button2 = Button( self , text = "Change interval", command = show).pack() 
 		  
 		# Create Label 
 		label = Label( self , text = " " ) 
