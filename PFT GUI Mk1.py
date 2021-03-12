@@ -31,7 +31,9 @@ LARGE_FONT= ("Verdana", 12)
 style.use("ggplot") # can do a dark mode i forgot how
 
 f = Figure(figsize=(5,5), dpi=100)
-a = f.add_subplot(111)
+g = Figure(figsize=(5,5), dpi=100)
+graph1 = f.add_subplot(111)
+graph2 = g.add_subplot(111)
 
 symbol = ''
 
@@ -309,7 +311,7 @@ class SeaofBTCapp(tk.Tk):
 
 			self.frames[F] = frame
 
-			frame.grid(row=0, column=0, sticky="nsew")
+			frame.grid(row=1, column=1, sticky="nsew")
 
 		self.show_frame(StartPage)
 
@@ -376,11 +378,12 @@ class PageThree(tk.Frame):
 	def __init__(self, parent, controller):
 		tk.Frame.__init__(self, parent)
 		label = tk.Label(self, text="Graph Page!", font=LARGE_FONT)
-		label.pack(pady=10,padx=10)
-
+		#label.pack(pady=10,padx=10)
+		label.grid()
 		button1 = ttk.Button(self, text="Back to Home",
 							command=lambda: controller.show_frame(StartPage))
-		button1.pack()
+		#button1.pack()
+		button1.grid()
 		
 		symbol = tk.StringVar()
 		# cryptoinsert = ttk.Entry(self, textvariable=symbol)
@@ -393,6 +396,32 @@ class PageThree(tk.Frame):
 		# crypto_button = ttk.Button(self, text="Crypto", command=graph_balance(symbol))
 		# crypto_button.pack(fill='x', expand=True, pady=10)
 		
+		# take the data 
+		lst = [(1,'Raj','Mumbai',19), 
+			   (2,'Aaryan','Pune',18), 
+			   (3,'Vaishnavi','Mumbai',20), 
+			   (4,'Rachna','Mumbai',21), 
+			   (5,'Shubham','Delhi',21)] 
+		   
+		# find total number of rows and 
+		# columns in list 
+		total_rows = len(lst) 
+		total_columns = len(lst[0]) 
+		
+		# code for creating table 
+		for i in range(total_rows): 
+			for j in range(total_columns): 
+				  
+				self.e = Entry(self, width=20, fg='blue', 
+							   font=('Arial',16,'bold')) 
+				  
+				self.e.grid(row=i, column=j)
+				#self.e.pack()
+				self.e.insert(END, lst[i][j]) 
+		   
+		# create root window 
+		#self = Tk() 
+		#t = Table(self)
 		def graph_balance(interval='hour', span='week', bounds='24_7', info=None, self=self):
 			"""
 				FOR STOCKS ONLY
@@ -404,7 +433,8 @@ class PageThree(tk.Frame):
 			#print(symbol)
 			print(interval, span, bounds)
 			label = Label( self , text = " " ) 
-			label.pack() 
+			#label.pack()
+			label.grid()
 			label.config( text = symbol.get() )
 			label.config( text = interval_var.get() )
 			interval = interval_var.get()
@@ -412,6 +442,29 @@ class PageThree(tk.Frame):
 			#symbol = symbol.get()
 			#symbol = input('Enter crypto ticker: ')
 			print(symbol.get())
+			print(interval)
+			historical_portfolio = r.get_historical_portfolio(interval=interval, span='all', info=info) ###### could change info to close_equity
+			historicalData = historical_portfolio['equity_historicals']
+			dates = []
+			closingPrices = []
+			openPrices = []
+			for data_point in historicalData:
+				# print(data_point)
+				dates.append(data_point['begins_at'])
+				closingPrices.append(float(data_point['close_equity'])) # close_price
+				openPrices.append(float(data_point['open_equity'])) # open_price
+			balance_datetimes_list_cleaned = []
+			for datetime in dates:
+				datetime = datetime.split('T')[0]
+				balance_datetimes_list_cleaned.append(datetime)
+			# print(balance_datetimes_list_cleaned)
+			
+			portfolio_balance_dates = [dt.datetime.strptime(datetime,'%Y-%m-%d') for datetime in balance_datetimes_list_cleaned]
+			import numpy as np
+			# a1, a2 = df1.align(df2, join='outer', axis=1)
+			# print(portfolio_balance_dates, closingPrices)
+			# input()
+			portfolio_balance_dates_df = pd.DataFrame(np.array(closingPrices), columns = list(['portfolio balance']), index=portfolio_balance_dates)
 			try:
 				bounds = '24_7'
 				historical_portfolio = r.crypto.get_crypto_historicals(symbol.get(), interval=interval, span=span, bounds=bounds, info=info) 
@@ -419,7 +472,7 @@ class PageThree(tk.Frame):
 				# if 'Not found for url' in str(e):
 			except TypeError:
 				#print(interval)
-				# historical_portfolio = r.get_historical_portfolio(symbol.get(), interval=interval, span=span, bounds=bounds, info=info) ###### could change info to close_equity
+				
 				bounds = 'regular'
 				historical_portfolio = r.get_stock_historicals(symbol.get(), interval=interval, span=span, bounds=bounds, info=info) ###### could change info to close_equity
 			# display(historical_portfolio)
@@ -450,16 +503,20 @@ class PageThree(tk.Frame):
 			print(dates_list)
 			#input()
 			print('plotting graph')
-			a.clear()
-			a.plot(dates_list,close_prices_list)
+			graph1.clear()
+			graph2.clear()
+			graph1.plot(dates_list,close_prices_list)
+			graph2.plot(portfolio_balance_dates_df)
 
 			
 		from tkinter import messagebox
 		
-		Label(self, text='Enter Crypto Ticker Symbol').pack(pady=20)
+		#Label(self, text='Enter Crypto Ticker Symbol').pack(pady=20)
+		Label(self, text='Enter Crypto Ticker Symbol').grid(pady=0)
 		name_Tf = Entry(self, textvariable=symbol)
 		name_Tf.bind('<Return>', graph_balance)
-		name_Tf.pack()
+		#name_Tf.pack()
+		name_Tf.grid()
 		#name_Tf.focus()
 		# Change the label text 
 		# def show():  
@@ -489,35 +546,41 @@ class PageThree(tk.Frame):
 		  
 		# Create Dropdown menu 
 		interval_dropdown = OptionMenu( self , interval_var , *interval_options ) 
-		interval_dropdown.pack() 
-
+		#interval_dropdown.pack() 
+		interval_dropdown.grid()
 		# Create Dropdown menu 
 		span_dropdown = OptionMenu( self , span_var , *span_options ) 
-		span_dropdown.pack() 
-		  
+		#span_dropdown.pack() 
+		span_dropdown.grid() 
 		# Create button, it will change label text 
 		# button = Button( self , text = "Graph" , command = graph_balance ).pack() 
 		# button2 = Button( self , text = "Change interval", command = show).pack() 
 		  
 		# Create Label 
 		label = Label( self , text = " " ) 
-		label.pack() 
+		#label.pack()
+		label.grid()
 		print(symbol)
 		
-		
+		frame1 = tk.Frame()
 		canvas = FigureCanvasTkAgg(f, self)
+		canvas2 = FigureCanvasTkAgg(g, frame1)
 		#canvas.show()
 		canvas.draw()
-		canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
-
-		toolbar = NavigationToolbar2TkAgg(canvas, self)
-		toolbar.update()
-		canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+		canvas2.draw()
+		#canvas.get_tk_widget().pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
+		canvas.get_tk_widget().grid()
+		canvas2.get_tk_widget().grid()
+		#toolbar = NavigationToolbar2TkAgg(canvas, self)
+		#toolbar.update()
+		#canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+		canvas._tkcanvas.grid()
+		canvas2._tkcanvas.grid()
 		
 		
 
 
 app = SeaofBTCapp()
-seconds = 17
+seconds = 10
 ani = animation.FuncAnimation(f, animate, interval=seconds*1000)
 app.mainloop()
