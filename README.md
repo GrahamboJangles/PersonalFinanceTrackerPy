@@ -16,6 +16,8 @@ This is an open-source personal finance and portfolio tracker that I made so I c
   - Stock
   - Options
   - Crypto
+
+- Whole net worth tracker with support for other brokerages by manually entering positions
   
 ### Tables:
 
