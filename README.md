@@ -5,6 +5,9 @@ This is an open-source personal finance and portfolio tracker that I made so I c
 
 ### Functionality:
 
+- Add options screener by custom formula
+  - Currently available as a standalone repository: https://github.com/GrahamboJangles/PutPremiumProcessor
+
 - Add support for other brokerages
   - TD Ameritrade
   - Interactive Brokers
