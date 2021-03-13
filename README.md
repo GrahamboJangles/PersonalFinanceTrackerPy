@@ -37,7 +37,8 @@ This is an open-source personal finance and portfolio tracker that I made so I c
   - Add dropdown for span
   - Add a checkbox for whether to include bank transfers in graph 
   
-- Print profit for day next to current portfolio balance
+- Print current portfolio balance next to portfolio chart
+  - Print profit for day
 
 ### Known Bugs:
 - The portfolio chart only works for 'all' span, and even then it doesn't look quite right
