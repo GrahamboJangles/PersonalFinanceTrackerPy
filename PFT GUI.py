@@ -50,7 +50,8 @@ def animate(i):
 	
 	total_equity = float(r.account.load_phoenix_account()['total_equity']['amount'])
 	print(f'Portfolio balance: ${total_equity:.2f}')
-	previous_close = float(r.account.load_phoenix_account()['portfolio_previous_close']['amount'])
+	try: previous_close = float(r.account.load_phoenix_account()['portfolio_previous_close']['amount'])
+	except Exception as e: print(f'previous_close error: {e}')
 	print(f"Today's profit: ${total_equity - previous_close:.2f}")
 	
 	#graph_historical_portfolio()
@@ -768,7 +769,43 @@ class PageThree(tk.Frame):
 			span_check = ['day', 'week', 'month', '3month', 'year', '5year', 'all']
 			bounds_check = ['extended', 'regular', 'trading']
 			"""
-			
+			bank_transfers = r.get_bank_transfers() # info=amount
+
+			historical_transfers = []
+
+			for transfer in bank_transfers:
+				state = transfer['state']
+				if state != "completed":
+					continue
+				amount = float(transfer['amount'])
+				direction = transfer['direction']
+				# print(amount, state, direction)
+				if direction != 'deposit':
+					amount = -amount
+				historical_transfers.append(amount)
+
+			transfer_datetimes_list = []
+
+			for transfer in bank_transfers:
+				state = transfer['state']
+				if state != "completed":
+					continue
+				transfer_datetime = transfer['updated_at']
+				transfer_datetimes_list.append(transfer_datetime)
+
+			# change the dates into a format that matplotlib can recognize.
+			# historical_transfer_dates = [dt.datetime.strptime(datetime,'%Y-%m-%dT%H:%M:%S.%f%z') for datetime in transfer_datetimes_list]
+			# print(transfer_datetimes_list)
+			# '2021-02-17T14:59:49.452230Z'
+			transfer_datetimes_list_cleaned = []
+			for datetime in transfer_datetimes_list:
+				datetime = datetime.split('T')[0]
+				transfer_datetimes_list_cleaned.append(datetime)
+				# print(transfer_datetimes_list_cleaned)
+
+			historical_transfer_dates = [dt.datetime.strptime(datetime,'%Y-%m-%d') for datetime in transfer_datetimes_list_cleaned]
+			import numpy as np
+			historical_transfers_df = pd.DataFrame(np.array(historical_transfers), columns = list(['historical transfers']), index=historical_transfer_dates)
 
 			print(symbol.get())
 			print(interval, span, bounds)
@@ -806,6 +843,31 @@ class PageThree(tk.Frame):
 			# print(portfolio_balance_dates, close_equity_list)
 			# input()
 			portfolio_balance_dates_df = pd.DataFrame(np.array(close_equity_list), columns = list(['portfolio balance']), index=portfolio_balance_dates)
+			portfolio_balance_dates_df = portfolio_balance_dates_df.merge(historical_transfers_df,
+																				  how='outer',
+																				  left_index=True,
+																				  right_index=True,
+																				).fillna(0)
+			i = len(portfolio_balance_dates_df)-1
+			portfolio_balance_dates_df['running transfers'] = 0.00
+			for i in range(len(portfolio_balance_dates_df)):
+				portfolio_balance_dates_df['running transfers'][i] = portfolio_balance_dates_df['running transfers'][i-1] + portfolio_balance_dates_df['historical transfers'][i]
+
+
+			i = len(portfolio_balance_dates_df)
+
+			while i >= 0:
+				portfolio_balance_dates_df['running balance'] = portfolio_balance_dates_df['portfolio balance'] - portfolio_balance_dates_df['running transfers']
+				i = i - 1
+
+			portfolio_balance_dates_df.loc[portfolio_balance_dates_df['running balance'] < 0, 'running balance'] = 0
+
+			# plt.plot(portfolio_balance_dates_df['running balance'])
+			# # plt.plot(x, openPrices)
+			# plt.ylabel('Price')
+			# plt.xlabel('Date')
+			# plt.show()
+
 			if symbol.get() != '':
 				
 				try:
@@ -856,7 +918,8 @@ class PageThree(tk.Frame):
 			
 			a = f2.add_subplot(111)
 			
-			a.plot(dates, close_equity_list)
+			# a.plot(dates, close_equity_list)
+			a.plot(portfolio_balance_dates_df['running balance'])
 			
 			canvas2 = FigureCanvasTkAgg(f2, self)
 			
