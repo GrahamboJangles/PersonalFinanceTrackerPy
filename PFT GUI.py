@@ -30,10 +30,10 @@ from tkinter import ttk
 LARGE_FONT= ("Verdana", 12)
 style.use("dark_background") # ggplot is default
 
-figure = Figure(figsize=(5,5), dpi=100)
+f = Figure(figsize=(5,5), dpi=100)
 #g = Figure(figsize=(5,5), dpi=100)
-graph1 = figure.add_subplot(111)
-#graph2 = figure.add_subplot(111)
+graph1 = f.add_subplot(111)
+#graph2 = f.add_subplot(111)
 
 symbol = ''
 
@@ -54,10 +54,12 @@ def animate(i):
 	print(f"Today's profit: ${total_equity - previous_close:.2f}")
 	
 	#graph_historical_portfolio()
-	#positions_df()
 		
 	#graph_balance(span='day')
-	#graph_balance()
+	positions_df()
+	graph_balance()
+	
+	# PageThree()
 	#"""Basic test frame for the table"""
 	#from pandastable import Table, TableModel
 	#def __init__(self, parent=None):
@@ -397,330 +399,368 @@ class PageThree(tk.Frame):
 		# crypto_button.pack(fill='x', expand=True, pady=10)
 		
 		
-
+		global positions_df
 		def positions_df():
-			beta_reference = 'SPY'
 
-			positions_data = r.get_open_stock_positions()
+			# r.markets.get_markets()
+			import datetime as dt
+			import datetime
+			market_next_open_datetime = r.markets.get_market_next_open_hours('ARCX')['opens_at']
+			print(market_next_open_datetime)
 
-			# option_positions_data = r.get_all_option_positions()
-			option_positions_data = r.get_open_option_positions()
-			# print(option_positions_data)
-			## Note: This for loop adds the stock ticker to every order, since Robinhood
-			## does not provide that information in the stock orders.
-			## This process is very slow since it is making a GET request for each order.
+			market_close_datetime = r.markets.get_market_today_hours('ARCX')['closes_at']
+			market_close_datetime = dt.datetime.strptime(market_close_datetime,'%Y-%m-%dT%H:%M:%SZ')
 
-			positions_symbol_list = []
-			positions_qty_list = []
-			positions_average_price = []
-			positions_current_price = []
+			market_next_open_datetime = dt.datetime.strptime(market_next_open_datetime,'%Y-%m-%dT%H:%M:%SZ')
+			current_datetime = datetime.datetime.now()
 
-			for position in positions_data:
-				"""
-				Maybe use r.build_holdings() instead?
-				"""
-				# print(position)
-				symbol = r.get_symbol_by_url(position['instrument']) 
-				position['symbol'] = symbol
-				positions_symbol_list.append(symbol)
-				positions_qty_list.append(float(position['quantity']))
-				positions_average_price.append(float(position['average_buy_price']))
-				positions_current_price.append(float(r.get_stock_quote_by_symbol(symbol)['last_trade_price']))
+			# Input own current_datetime to test functionality
+			# current_datetime = '2021-03-13 02:51:10.383190'
+			# current_datetime = current_datetime[:-3]
+			# current_datetime = dt.datetime.strptime(current_datetime,'%Y-%m-%d %H:%M:%S.%f')
 
-			# print(position_symbol_list, position_qty_list)
-			# input()
-			# df.set_index('position',inplace=False)
+			print(market_close_datetime, "\n", 
+			      current_datetime)
 
-			# item['symbol']
-			# display(position)
-			# input()
-			# symbol = positions_data['chain_symbol']
-			# print(symbol)
+			if (current_datetime > market_close_datetime) and (current_datetime < market_next_open_datetime):
+			  market_open = False
+			else: 
+			  market_open = True
 
-			option_positions_symbol_list = []
-			option_positions_qty_list = []
-			fill_prices_list = []
-			option_positions_option_id_list = []
-			option_positions_delta_list = []
-			option_positions_beta_weighted_delta_list = []
-			option_prices_list = []
-			strike_prices_list = []
-			expirations_list = []
-			open_order_list = []
+			if market_open:
+			  print('market open')
+			else: print('market closed')
 
-			for option_position in option_positions_data:
-				# print(option_position)
-				# print(option_position['chain_symbol'])
-				# option_position['symbol'] = r.get_symbol_by_url(option_position['instrument'])
-				symbol = option_position['chain_symbol']
-				option_positions_symbol_list.append(symbol)
-				qty = int(float(option_position['quantity']))
-				option_positions_qty_list.append(qty)
+			global already_got_options
+			try: already_got_options
+			except: already_got_options = False
 
-				fill_price = float(option_position['average_price'])/100
-				fill_prices_list.append(fill_price)
+			if (already_got_options == False) and not market_open:
+				beta_reference = 'SPY'
 
-				option_id = option_position['option_id']
-				option_positions_option_id_list.append(option_id)
+				positions_data = r.get_open_stock_positions()
 
-				delta = float(r.get_option_market_data_by_id(option_id)[0]['delta'])
-				option_positions_delta_list.append(delta)
+				# option_positions_data = r.get_all_option_positions()
+				option_positions_data = r.get_open_option_positions()
+				# print(option_positions_data)
+				## Note: This for loop adds the stock ticker to every order, since Robinhood
+				## does not provide that information in the stock orders.
+				## This process is very slow since it is making a GET request for each order.
 
-				option_price = float(r.get_option_market_data_by_id(option_id)[0]['last_trade_price'])
-				option_prices_list.append(option_price)
+				positions_symbol_list = []
+				positions_qty_list = []
+				positions_average_price = []
+				positions_current_price = []
 
-				strike_price = float(r.get_option_instrument_data_by_id(option_id)['strike_price'])
-				strike_prices_list.append(strike_price)
+				for position in positions_data:
+					"""
+					Maybe use r.build_holdings() instead?
+					"""
+					# print(position)
+					symbol = r.get_symbol_by_url(position['instrument']) 
+					position['symbol'] = symbol
+					positions_symbol_list.append(symbol)
+					positions_qty_list.append(float(position['quantity']))
+					positions_average_price.append(float(position['average_buy_price']))
+					positions_current_price.append(float(r.get_stock_quote_by_symbol(symbol)['last_trade_price']))
 
-				expiration = r.get_option_instrument_data_by_id(option_id)['expiration_date']
-				expirations_list.append(expiration)
+				# print(position_symbol_list, position_qty_list)
+				# input()
+				# df.set_index('position',inplace=False)
 
-				# Getting open positions
-				open_option_orders = r.get_all_open_option_orders(info=None)
+				# item['symbol']
+				# display(position)
+				# input()
+				# symbol = positions_data['chain_symbol']
+				# print(symbol)
 
-				open_order_option_id_list = []
-				open_order = ''
+				option_positions_symbol_list = []
+				option_positions_qty_list = []
+				fill_prices_list = []
+				option_positions_option_id_list = []
+				option_positions_delta_list = []
+				option_positions_beta_weighted_delta_list = []
+				option_prices_list = []
+				strike_prices_list = []
+				expirations_list = []
+				open_order_list = []
 
-				for open_option_order in open_option_orders:
+				for option_position in option_positions_data:
+					# print(option_position)
+					# print(option_position['chain_symbol'])
+					# option_position['symbol'] = r.get_symbol_by_url(option_position['instrument'])
+					symbol = option_position['chain_symbol']
+					option_positions_symbol_list.append(symbol)
+					qty = int(float(option_position['quantity']))
+					option_positions_qty_list.append(qty)
 
-				  if symbol in open_option_order['chain_symbol']:
+					fill_price = float(option_position['average_price'])/100
+					fill_prices_list.append(fill_price)
 
-				    # print(int(float(open_option_order['quantity'])))
-				    # print(open_option_order['legs'])
+					option_id = option_position['option_id']
+					option_positions_option_id_list.append(option_id)
 
-				    for leg in open_option_order['legs']:
-				      
-				      open_order_option_id = leg['option']
-				      open_order_option_id = open_order_option_id.split('/')
-				      open_order_option_id = open_order_option_id[5]
-				      open_order_option_id_list.append(open_order_option_id)
+					delta = float(r.get_option_market_data_by_id(option_id)[0]['delta'])
+					option_positions_delta_list.append(delta)
 
-				      if open_order_option_id == option_id:
-				        open_order = str(int(float(open_option_order['quantity']))) + ' ' + leg['position_effect'] + ' ' + str(round(float(open_option_order['price']), 2))
+					option_price = float(r.get_option_market_data_by_id(option_id)[0]['last_trade_price'])
+					option_prices_list.append(option_price)
 
-				open_order_list.append(open_order)
+					strike_price = float(r.get_option_instrument_data_by_id(option_id)['strike_price'])
+					strike_prices_list.append(strike_price)
 
-				# /end Getting open positions
+					expiration = r.get_option_instrument_data_by_id(option_id)['expiration_date']
+					expirations_list.append(expiration)
 
-				reference_price = float(r.get_stock_quote_by_symbol(beta_reference)['last_trade_price'])
-				underlying_price = float(r.get_stock_quote_by_symbol(symbol)['last_trade_price'])
-				beta = 2.04 ################################################################################## find a way to dynamically get beta of SPY
-				delta = delta * qty
-				beta_weighted_delta = (beta * underlying_price * delta) / reference_price 
-				option_positions_beta_weighted_delta_list.append(beta_weighted_delta)
+					# Getting open positions
+					open_option_orders = r.get_all_open_option_orders(info=None)
 
-			# Create the pandas DataFrame 
-			# df = pd.DataFrame({
-			#                   'symbol': position['symbol'],
-			#                   'quantity': position['quantity']          
-			#                   }, index=[0])
-			stocks_df = pd.DataFrame({
-			                'symbol': positions_symbol_list,
-			                'price': positions_current_price,
-			                'average filled price': positions_average_price,
-			                'quantity': positions_qty_list         
-			                }, index=[0])
-			stocks_df['profit'] = (stocks_df['price'] - abs(stocks_df['average filled price'])) * stocks_df['quantity']
-			print('\t Stocks')
-			#display(stocks_df)
-			print(f'Total stocks profit: ${stocks_df.profit.sum():.2f}')
-			print()
+					open_order_option_id_list = []
+					open_order = ''
 
-			options_df = pd.DataFrame({
-			                'symbol': option_positions_symbol_list,
-			                'strike': strike_prices_list,
-			                'quantity': option_positions_qty_list,
-			                'average filled price': fill_prices_list,
-			                'price': option_prices_list,
-			                'expiration': expirations_list,
-			                'beta weighted delta': option_positions_beta_weighted_delta_list,
-			                'open orders': open_order_list
-			                # 'delta': option_positions_delta_list      
-			                })
+					for open_option_order in open_option_orders:
 
-			options_df['profit'] = ((abs(options_df['average filled price']) - options_df['price']) * options_df['quantity']) * 100
-			# portfolio_balance_dates_df.loc[portfolio_balance_dates_df['running balance'] < 0, 'running balance'] = 0
-			options_df['collateral'] = (options_df['strike'] * 100) * abs(options_df['quantity'])
-			# Convert 'collateral' column from float to integer
-			options_df['collateral'] = pd.to_numeric(options_df['collateral'], downcast='integer')
-			options_df = options_df.sort_values(by='expiration')
+					  if symbol in open_option_order['chain_symbol']:
 
-			options_df['total credit'] = (abs(options_df['average filled price']) * abs(options_df['quantity'])) * 100
-			# Adjusting collateral for credit spreads
-			for i in range(len(options_df)):
-				if (options_df['average filled price'][i] < 0) and (options_df['expiration'][i] == options_df['expiration'][i+1]):
-					options_df['collateral'][i] = (abs(options_df['strike'][i] - options_df['strike'][i+1]) * 100) * options_df['quantity'][i]
-					options_df['collateral'][i+1] = 0
+					    # print(int(float(open_option_order['quantity'])))
+					    # print(open_option_order['legs'])
 
-					options_df['total credit'][i] = options_df['total credit'][i] - options_df['total credit'][i+1]
-					options_df['total credit'][i+1] = 0
+					    for leg in open_option_order['legs']:
+					      
+					      open_order_option_id = leg['option']
+					      open_order_option_id = open_order_option_id.split('/')
+					      open_order_option_id = open_order_option_id[5]
+					      open_order_option_id_list.append(open_order_option_id)
 
-					# options_df['profit'][i] = options_df['profit'][i+1] - options_df['profit'][i+1]
-					options_df['profit'][i] = ((abs(options_df['average filled price'][i]) - options_df['average filled price'][i+1]) - (options_df['profit'][i] - options_df['profit'][i+1])) * 100
-					options_df['profit'][i] = (options_df['price'][i] - options_df['average filled price'][i]) - (options_df['price'][i+1] - options_df['average filled price'][i+1])
+					      if open_order_option_id == option_id:
+					        open_order = str(int(float(open_option_order['quantity']))) + ' ' + leg['position_effect'] + ' ' + str(round(float(open_option_order['price']), 2))
 
-			options_df.loc[options_df['collateral'] == 0, 'total credit'] = 0
+					open_order_list.append(open_order)
 
-			# /end Adjusting collateral for credit spreads
+					# /end Getting open positions
 
-			options_df['% of total credit'] = (options_df['profit'] / options_df['total credit']) * 100
-			options_df.loc[options_df['collateral'] == 0, '% of total credit'] = 0
-			options_df['% return left'] = (((options_df['collateral'] + (options_df['total credit'] - options_df['profit'])) - options_df['collateral']) / (options_df['collateral'] + (options_df['total credit'] - options_df['profit']))) * 100
-			options_df.loc[options_df['collateral'] == 0, '% return left'] = 0
-			# if options_df['% return left'].item < 25 and (options_df['profit'] == (options_df['total credit'] / 2)):
-			#   options_df['test'] = 'Closing this position for profit is recommended'
-			# max_shares = stock['balance'].div(stock['close'].values,axis=0)
-			# import numpy as np
-			# test = np.where(options_df['% return left'] < 25, 'Closing this position for profit is recommended', '')
-			# df['Result'] = np.where((df.S == 1) & (df.A == 1), 1,   #when... then
-			#                np.where((df.S == 1) & (df.A == 0), 0,  #when... then
-			#                 np.where((df.S == 2) & (df.A == 1), 0,  #when... then
-			#                   1)))                                  #else
-			# options_df['test'] = test
+					reference_price = float(r.get_stock_quote_by_symbol(beta_reference)['last_trade_price'])
+					underlying_price = float(r.get_stock_quote_by_symbol(symbol)['last_trade_price'])
+					beta = 2.04 ################################################################################## find a way to dynamically get beta of SPY
+					delta = delta * qty
+					beta_weighted_delta = (beta * underlying_price * delta) / reference_price 
+					option_positions_beta_weighted_delta_list.append(beta_weighted_delta)
 
-			from datetime import datetime
-			from datetime import date
+				# Create the pandas DataFrame 
+				# df = pd.DataFrame({
+				#                   'symbol': position['symbol'],
+				#                   'quantity': position['quantity']          
+				#                   }, index=[0])
+				stocks_df = pd.DataFrame({
+				                'symbol': positions_symbol_list,
+				                'price': positions_current_price,
+				                'average filled price': positions_average_price,
+				                'quantity': positions_qty_list         
+				                }, index=[0])
+				stocks_df['profit'] = (stocks_df['price'] - abs(stocks_df['average filled price'])) * stocks_df['quantity']
+				print('\t Stocks')
+				#display(stocks_df)
+				print(f'Total stocks profit: ${stocks_df.profit.sum():.2f}')
+				print()
 
-			# Returns the current local date 
-			today = date.today() 
-			#print("Today date is: ", today) 
+				options_df = pd.DataFrame({
+				                'symbol': option_positions_symbol_list,
+				                'strike': strike_prices_list,
+				                'quantity': option_positions_qty_list,
+				                'average filled price': fill_prices_list,
+				                'price': option_prices_list,
+				                'expiration': expirations_list,
+				                'beta weighted delta': option_positions_beta_weighted_delta_list,
+				                'open orders': open_order_list
+				                # 'delta': option_positions_delta_list      
+				                })
 
-			def days_between(d1, d2):
-			  d1 = datetime.strptime(d1, "%Y-%m-%d")
-			  d2 = datetime.strptime(d2, "%Y-%m-%d")
-			  return abs((d2 - d1).days)
+				options_df['profit'] = ((abs(options_df['average filled price']) - options_df['price']) * options_df['quantity']) * 100
+				# portfolio_balance_dates_df.loc[portfolio_balance_dates_df['running balance'] < 0, 'running balance'] = 0
+				options_df['collateral'] = (options_df['strike'] * 100) * abs(options_df['quantity'])
+				# Convert 'collateral' column from float to integer
+				options_df['collateral'] = pd.to_numeric(options_df['collateral'], downcast='integer')
+				options_df = options_df.sort_values(by='expiration')
 
-			# days_to_expiration = days_between(options_df['expiration'], str(today))
-			# options_df['DTE'] = days_between(options_df['expiration'], str(today))
-			DTE_list = []
-			for expiration in options_df['expiration']:
-				DTE_list.append(days_between(expiration, str(today)))
-			options_df['DTE'] = DTE_list
-			options_df['annual % return left'] = (options_df['% return left'] / options_df['DTE']) * 365
+				options_df['total credit'] = (abs(options_df['average filled price']) * abs(options_df['quantity'])) * 100
+				# Adjusting collateral for credit spreads
+				for i in range(len(options_df)):
+					if (options_df['average filled price'][i] < 0) and (options_df['expiration'][i] == options_df['expiration'][i+1]):
+						options_df['collateral'][i] = (abs(options_df['strike'][i] - options_df['strike'][i+1]) * 100) * options_df['quantity'][i]
+						options_df['collateral'][i+1] = 0
 
-			print('\t Options')
-			#display(options_df)
-			total_beta_weighted_delta = sum(option_positions_beta_weighted_delta_list)
-			print()
-			print(f'Total options profit: ${options_df.profit.sum():.2f}')
-			print(f'Option portfolio beta weighted delta: {total_beta_weighted_delta:.3f}')
+						options_df['total credit'][i] = options_df['total credit'][i] - options_df['total credit'][i+1]
+						options_df['total credit'][i+1] = 0
 
-			print()
+						# options_df['profit'][i] = options_df['profit'][i+1] - options_df['profit'][i+1]
+						options_df['profit'][i] = ((abs(options_df['average filled price'][i]) - options_df['average filled price'][i+1]) - (options_df['profit'][i] - options_df['profit'][i+1])) * 100
+						options_df['profit'][i] = (options_df['price'][i] - options_df['average filled price'][i]) - (options_df['price'][i+1] - options_df['average filled price'][i+1])
 
-			cash_balances = r.account.load_phoenix_account()
+				options_df.loc[options_df['collateral'] == 0, 'total credit'] = 0
 
-			total_crypto_equity = float(cash_balances['crypto']['equity']['amount'])
-			total_options_collat = float(cash_balances['cash_held_for_options_collateral']['amount'])
-			buying_power = cash_balances['account_buying_power']['amount']
-			cash_in_orders = cash_balances['cash_held_for_equity_orders']['amount']
+				# /end Adjusting collateral for credit spreads
 
-			total_equity = float(cash_balances['total_equity']['amount'])
+				options_df['% of total credit'] = (options_df['profit'] / options_df['total credit']) * 100
+				options_df.loc[options_df['collateral'] == 0, '% of total credit'] = 0
+				options_df['% return left'] = (((options_df['collateral'] + (options_df['total credit'] - options_df['profit'])) - options_df['collateral']) / (options_df['collateral'] + (options_df['total credit'] - options_df['profit']))) * 100
+				options_df.loc[options_df['collateral'] == 0, '% return left'] = 0
+				# if options_df['% return left'].item < 25 and (options_df['profit'] == (options_df['total credit'] / 2)):
+				#   options_df['test'] = 'Closing this position for profit is recommended'
+				# max_shares = stock['balance'].div(stock['close'].values,axis=0)
+				# import numpy as np
+				# test = np.where(options_df['% return left'] < 25, 'Closing this position for profit is recommended', '')
+				# df['Result'] = np.where((df.S == 1) & (df.A == 1), 1,   #when... then
+				#                np.where((df.S == 1) & (df.A == 0), 0,  #when... then
+				#                 np.where((df.S == 2) & (df.A == 1), 0,  #when... then
+				#                   1)))                                  #else
+				# options_df['test'] = test
 
-			print(f'Portfolio balance: ${total_equity:.2f}')
+				from datetime import datetime
+				from datetime import date
 
-			print(f'Total crypto equity: ${total_crypto_equity}')
-			print(f'Total options collateral: ${total_options_collat}')
-			print(f'Buying power: ${buying_power}')
-			print(f'Total cash in open orders: ${cash_in_orders}')
+				# Returns the current local date 
+				today = date.today() 
+				#print("Today date is: ", today) 
 
-			print(f'% of portfolio in crypto: {(total_crypto_equity/total_equity)*100:.2f}%')
-			print(f'% of portfolio in options collateral: {(total_options_collat/total_equity)*100:.2f}%')
+				def days_between(d1, d2):
+				  d1 = datetime.strptime(d1, "%Y-%m-%d")
+				  d2 = datetime.strptime(d2, "%Y-%m-%d")
+				  return abs((d2 - d1).days)
 
-			# take the data 
-			# lst = [(1,'Raj','Mumbai',19), 
-			# 	   (2,'Aaryan','Pune',18), 
-			# 	   (3,'Vaishnavi','Mumbai',20), 
-			# 	   (4,'Rachna','Mumbai',21), 
-			# 	   (5,'Shubham','Delhi',21)] 
+				# days_to_expiration = days_between(options_df['expiration'], str(today))
+				# options_df['DTE'] = days_between(options_df['expiration'], str(today))
+				DTE_list = []
+				for expiration in options_df['expiration']:
+					DTE_list.append(days_between(expiration, str(today)))
+				options_df['DTE'] = DTE_list
+				options_df['annual % return left'] = (options_df['% return left'] / options_df['DTE']) * 365
 
-			# headers = [	'option_positions_symbol_list',
-			# 			'strike_prices_list',
-			# 			'option_positions_qty_list',
-			# 			'fill_prices_list',
-			# 			'option_prices_list',
-			# 			'expirations_list',
-			# 			'option_positions_beta_weighted_delta_list',
-			# 			'open_order_list']
-			headers = 'symbol	strike	quantity	average filled price	price	expiration	beta weighted delta	open orders	profit	collateral	total credit	% of total credit	% return left	DTE	annual % return left'
-			headers = headers.split('	')
+				print('\t Options')
+				#display(options_df)
+				total_beta_weighted_delta = sum(option_positions_beta_weighted_delta_list)
+				print()
+				print(f'Total options profit: ${options_df.profit.sum():.2f}')
+				print(f'Option portfolio beta weighted delta: {total_beta_weighted_delta:.3f}')
 
-			lst = 	[[headers],
-					option_positions_symbol_list,
-					strike_prices_list,
-					option_positions_qty_list,
-					fill_prices_list,
-					option_prices_list,
-					expirations_list,
-					option_positions_beta_weighted_delta_list,
-					open_order_list]
+				print()
 
-			# 'symbol': option_positions_symbol_list,
-			# 'strike': strike_prices_list,
-			# 'quantity': option_positions_qty_list,
-			# 'average filled price': fill_prices_list,
-			# 'price': option_prices_list,
-			# 'expiration': expirations_list,
-			# 'beta weighted delta': option_positions_beta_weighted_delta_list,
-			# 'open orders': open_order_list
+				cash_balances = r.account.load_phoenix_account()
 
-			# lst = options_df
-			# lst = option_positions_symbol_list
-			   
-			# find total number of rows and 
-			# columns in list 
-	
-			# total_rows = len(lst) 
-			# total_columns = len(lst[0])
-			total_rows = len(lst)
-			total_columns = 3
-			# print(total_rows, total_columns)
-			#input()
-			# total_columns = len(options_df.columns)
-			
-			# code for creating table 
-			# for i in range(total_rows): 
-			# 	for j in range(total_columns): 
-					  
-			# 		self.e = Entry(self, width=20, fg='white', bg='black',
-			# 					   font=('Arial',16,'bold')) 
-					  
-			# 		self.e.grid(column=j+1, row=i+1, sticky='nsew', padx=0, pady=0)
+				total_crypto_equity = float(cash_balances['crypto']['equity']['amount'])
+				total_options_collat = float(cash_balances['cash_held_for_options_collateral']['amount'])
+				buying_power = cash_balances['account_buying_power']['amount']
+				cash_in_orders = cash_balances['cash_held_for_equity_orders']['amount']
 
-			# 		#self.e.pack()
-			# 		self.e.insert(END, lst[i][j]) 
+				total_equity = float(cash_balances['total_equity']['amount'])
 
-			
-			#print(len(options_df), len(options_df.columns))
-			#input()
+				print(f'Portfolio balance: ${total_equity:.2f}')
 
-			for column in range(len(headers)):
-				self.e = Entry(self, width=0, fg='white', bg='black',
-									   font=('Arial',12,'bold')) 
+				print(f'Total crypto equity: ${total_crypto_equity}')
+				print(f'Total options collateral: ${total_options_collat}')
+				print(f'Buying power: ${buying_power}')
+				print(f'Total cash in open orders: ${cash_in_orders}')
+
+				print(f'% of portfolio in crypto: {(total_crypto_equity/total_equity)*100:.2f}%')
+				print(f'% of portfolio in options collateral: {(total_options_collat/total_equity)*100:.2f}%')
+
+				# take the data 
+				# lst = [(1,'Raj','Mumbai',19), 
+				# 	   (2,'Aaryan','Pune',18), 
+				# 	   (3,'Vaishnavi','Mumbai',20), 
+				# 	   (4,'Rachna','Mumbai',21), 
+				# 	   (5,'Shubham','Delhi',21)] 
+
+				# headers = [	'option_positions_symbol_list',
+				# 			'strike_prices_list',
+				# 			'option_positions_qty_list',
+				# 			'fill_prices_list',
+				# 			'option_prices_list',
+				# 			'expirations_list',
+				# 			'option_positions_beta_weighted_delta_list',
+				# 			'open_order_list']
+				headers = 'symbol	strike	quantity	average filled price	price	expiration	beta weighted delta	open orders	profit	collateral	total credit	% of total credit	% return left	DTE	annual % return left'
+				headers = headers.split('	')
+
+				lst = 	[[headers],
+						option_positions_symbol_list,
+						strike_prices_list,
+						option_positions_qty_list,
+						fill_prices_list,
+						option_prices_list,
+						expirations_list,
+						option_positions_beta_weighted_delta_list,
+						open_order_list]
+
+				# 'symbol': option_positions_symbol_list,
+				# 'strike': strike_prices_list,
+				# 'quantity': option_positions_qty_list,
+				# 'average filled price': fill_prices_list,
+				# 'price': option_prices_list,
+				# 'expiration': expirations_list,
+				# 'beta weighted delta': option_positions_beta_weighted_delta_list,
+				# 'open orders': open_order_list
+
+				# lst = options_df
+				# lst = option_positions_symbol_list
+				   
+				# find total number of rows and 
+				# columns in list 
+		
+				# total_rows = len(lst) 
+				# total_columns = len(lst[0])
+				total_rows = len(lst)
+				total_columns = 3
+				# print(total_rows, total_columns)
+				#input()
+				# total_columns = len(options_df.columns)
+				
+				# code for creating table 
+				# for i in range(total_rows): 
+				# 	for j in range(total_columns): 
 						  
-				self.e.grid(column=column+1, row=2, sticky='nsew', padx=0, pady=0)
+				# 		self.e = Entry(self, width=20, fg='white', bg='black',
+				# 					   font=('Arial',16,'bold')) 
+						  
+				# 		self.e.grid(column=j+1, row=i+1, sticky='nsew', padx=0, pady=0)
 
-				#self.e.pack()
-				self.e.insert(END, headers[column]) 
+				# 		#self.e.pack()
+				# 		self.e.insert(END, lst[i][j]) 
 
-			for row in range(len(options_df)):
-				for column in range(len(options_df.columns)):
+				
+				#print(len(options_df), len(options_df.columns))
+				#input()
+
+				for column in range(len(headers)):
 					self.e = Entry(self, width=0, fg='white', bg='black',
 										   font=('Arial',12,'bold')) 
 							  
-					self.e.grid(column=column+1, row=row+3, sticky='nsew', padx=0, pady=0)
+					self.e.grid(column=column+1, row=2, sticky='nsew', padx=0, pady=0)
 
 					#self.e.pack()
-					self.e.insert(END, options_df.iloc[row,column]) 
-			   
-			# create root window 
-			#self = Tk() 
-			#t = Table(self)
+					self.e.insert(END, headers[column]) 
+
+				for row in range(len(options_df)):
+					for column in range(len(options_df.columns)):
+						self.e = Entry(self, width=0, fg='white', bg='black',
+											   font=('Arial',12,'bold')) 
+								  
+						self.e.grid(column=column+1, row=row+3, sticky='nsew', padx=0, pady=0)
+
+						#self.e.pack()
+						self.e.insert(END, options_df.iloc[row,column]) 
+				   
+				# create root window 
+				#self = Tk() 
+				#t = Table(self)
+
+			
+			already_got_options = True
 
 
 
 		#graph_historical_portfolio()
-		positions_df()
-
+		
+		global graph_balance
 		def graph_balance(interval='hour', span='week', bounds='24_7', info=None, self=self):
 			"""
 				FOR STOCKS ONLY
@@ -729,7 +769,8 @@ class PageThree(tk.Frame):
 			bounds_check = ['extended', 'regular', 'trading']
 			"""
 			
-			#print(symbol)
+
+			print(symbol.get())
 			print(interval, span, bounds)
 			label = Label( self , text = " " ) 
 			#label.pack()
@@ -765,27 +806,31 @@ class PageThree(tk.Frame):
 			# print(portfolio_balance_dates, close_equity_list)
 			# input()
 			portfolio_balance_dates_df = pd.DataFrame(np.array(close_equity_list), columns = list(['portfolio balance']), index=portfolio_balance_dates)
-			try:
-				bounds = '24_7'
-				historical_security = r.crypto.get_crypto_historicals(symbol.get(), interval=interval, span=span, bounds=bounds, info=info) 
-			# except Exception as e:
-				# if 'Not found for url' in str(e):
-			except TypeError:
-				#print(interval)
+			if symbol.get() != '':
 				
-				bounds = 'regular'
-				historical_security = r.get_stock_historicals(symbol.get(), interval=interval, span=span, bounds=bounds, info=info) ###### could change info to close_equity
-			# display(historical_portfolio)
-			#print(historical_portfolio[0])
-		
-			#input()
-			close_prices_list = []
-			dates_list = []
-			for candle in historical_security:
-				close_price = float(candle['close_price'])
-				close_prices_list.append(close_price)
-				date = candle['begins_at']
-				dates_list.append(date)
+				try:
+					bounds = '24_7'
+					historical_security = r.crypto.get_crypto_historicals(symbol.get(), interval=interval, span=span, bounds=bounds, info=info) 
+				# except Exception as e:
+					# if 'Not found for url' in str(e):
+				except TypeError:
+					#print(interval)
+					
+					bounds = 'regular'
+					historical_security = r.get_stock_historicals(symbol.get(), interval=interval, span=span, bounds=bounds, info=info) ###### could change info to close_equity
+				# display(historical_portfolio)
+				#print(historical_portfolio[0])
+			
+				#input()
+				close_prices_list = []
+				dates_list = []
+
+				for candle in historical_security:
+					close_price = float(candle['close_price'])
+					close_prices_list.append(close_price)
+					date = candle['begins_at']
+					dates_list.append(date)
+			
 		##		dates = []
 		##		close_equity_list = []
 		##		open_equity_list = []
@@ -796,19 +841,25 @@ class PageThree(tk.Frame):
 		##			close_equity_list.append(float(data_point['close_equity'])) # close_price
 		##			open_equity_list.append(float(data_point['open_equity'])) # open_price
 		 
-			# input(dates)
-			# change the dates into a format that matplotlib can recognize.
-			print(dates_list)
-			dates_list = [dt.datetime.strptime(d,'%Y-%m-%dT%H:%M:%SZ') for d in dates_list]
-			print(dates_list)
-			#input()
-			print('plotting graph')
-			graph1.clear()
-			graph1.plot(dates_list, close_prices_list)
+				# input(dates)
+				# change the dates into a format that matplotlib can recognize.
+				print(dates_list)
+				dates_list = [dt.datetime.strptime(d,'%Y-%m-%dT%H:%M:%SZ') for d in dates_list]
+				print(dates_list)
+				#input()
+				print('plotting graph')
+				graph1.clear()
+				
+				graph1.plot(dates_list, close_prices_list)
+			
 			f2 = Figure(figsize=(3,3), dpi=100)
+			
 			a = f2.add_subplot(111)
+			
 			a.plot(dates, close_equity_list)
+			
 			canvas2 = FigureCanvasTkAgg(f2, self)
+			
 			canvas2.get_tk_widget().grid(column=10, row=1, sticky='nsew', padx=0, pady=0, columnspan=10)#.place(relx=1,rely=0.100)
 			# toolbar_frame2 = tk.Frame(self)
 			# toolbar_frame2.grid(column = 0, row = 1)
@@ -820,6 +871,7 @@ class PageThree(tk.Frame):
 
 			canvas2._tkcanvas.grid(column=10, row=1, sticky='nsew', padx=0, pady=0, columnspan=10)#.place(relx=1,rely=0.100)
 			#graph2.plot(dates, close_equity_list)
+			
 
 			
 		from tkinter import messagebox
@@ -882,8 +934,8 @@ class PageThree(tk.Frame):
 
 
 		frame1 = tk.Frame()
-		canvas = FigureCanvasTkAgg(figure, self)
-		#canvas2 = FigureCanvasTkAgg(figure, self) # self is the page/window
+		canvas = FigureCanvasTkAgg(f, self)
+		#canvas2 = FigureCanvasTkAgg(f, self) # self is the page/window
 		#canvas.show()
 		canvas.draw()
 		#canvas2.draw()
@@ -910,6 +962,6 @@ class PageThree(tk.Frame):
 
 
 app = SeaofBTCapp()
-seconds = 10
-ani = animation.FuncAnimation(figure, animate, interval=seconds*1000)
+seconds = 20
+ani = animation.FuncAnimation(f, animate, interval=seconds*1000)
 app.mainloop()
