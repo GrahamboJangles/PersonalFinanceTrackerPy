@@ -51,3 +51,7 @@ This is an open-source personal finance and portfolio tracker that I made so I c
 
 ### Known Bugs:
 - The portfolio chart only works for 'all' span, and even then it doesn't look quite right
+
+- Sometimes the option table doesn't calculate things right
+
+- Fetching option data stops the rest of the program, will need to move to a separate thread
