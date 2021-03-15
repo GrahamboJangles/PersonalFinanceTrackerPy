@@ -3,7 +3,7 @@ This is an open-source personal finance and portfolio tracker that I made so I c
 
 ## TODO:
 
-### Functionality:
+### Features:
 
 - Add options screener by custom formula
   - Currently available as a standalone repository: https://github.com/GrahamboJangles/PutPremiumProcessor
@@ -21,6 +21,10 @@ This is an open-source personal finance and portfolio tracker that I made so I c
   - Crypto
 
 - Whole net worth tracker with support for other brokerages by manually entering positions
+
+### Functionality:
+
+- Put data fetching on another thread
   
 ### Tables:
 
