@@ -24,7 +24,7 @@ This is an open-source personal finance and portfolio tracker that I made so I c
 
 ### Functionality:
 
-- Put data fetching on another thread
+- ~~Put data fetching on another thread~~ (wow that was really easy)
   
 ### Tables:
 
@@ -54,4 +54,4 @@ This is an open-source personal finance and portfolio tracker that I made so I c
 
 - Sometimes the option table doesn't calculate things right
 
-- Fetching option data stops the rest of the program, will need to move to a separate thread
+- ~~Fetching option data stops the rest of the program, will need to move to a separate thread~~
