@@ -1,3 +1,6 @@
+![open source robinhood](https://user-images.githubusercontent.com/36944031/111206980-7a1dce00-859f-11eb-997c-61d6615a986a.PNG)
+
+
 # PersonalFinanceTrackerPy
 This is an open-source personal finance and portfolio tracker that I made so I can keep track of my stocks, options, dollars, and cryptocurrencies. Automatically retrieves brokerage info and calculates beta weighted delta. Currently only supports Robinhood, with plans for TD Ameritrade, Interactive Brokers, Gemini, and bank accounts through Plaid.
 
