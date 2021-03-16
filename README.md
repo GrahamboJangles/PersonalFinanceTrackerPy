@@ -27,6 +27,10 @@ This is an open-source personal finance and portfolio tracker that I made so I c
 ### Functionality:
 
 - ~~Put data fetching on another thread~~ (wow that was really easy)
+
+- Add a login to the main page
+
+- Make data update quicker
   
 ### Tables:
 
