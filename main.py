@@ -4,6 +4,9 @@
 #https://pythonprogramming.net/embedding-live-matplotlib-graph-tkinter-gui/?completed=/how-to-embed-matplotlib-graph-tkinter-gui/
 try:
 	import robin_stocks.robinhood as r
+	# try: r.logout()
+	# except: pass
+	# If having problem with login, delete C:\Users\{user}\.tokens\ pickle file
 	login = r.login('', '')
 
 	import datetime as dt
@@ -48,12 +51,7 @@ try:
 		import os
 		clear = lambda: os.system('cls')
 		clear()
-		
-		total_equity = float(r.account.load_phoenix_account()['total_equity']['amount'])
-		print(f'Portfolio balance: ${total_equity:.2f}')
-		try: previous_close = float(r.account.load_phoenix_account()['portfolio_previous_close']['amount'])
-		except Exception as e: print(f'previous_close error: {e}')
-		print(f"Today's profit: ${total_equity - previous_close:.2f}")
+	
 		
 		#graph_historical_portfolio()
 			
@@ -403,13 +401,13 @@ try:
 			tk.Frame.__init__(self, parent)
 			self.configure(background="black")
 			label = tk.Label(self, text="Graph Page!", font=LARGE_FONT)
-			#label.pack(pady=10,padx=10)
+			# label.pack(pady=10,padx=10)
 			label.grid()
 			button1 = ttk.Button(self, text="Back to Home",
 								command=lambda: controller.show_frame(StartPage))
 			#button1.pack()
-			# button1.grid()
-			button1.place()
+			button1.grid()
+			# button1.place()
 			
 			symbol = tk.StringVar()
 			# cryptoinsert = ttk.Entry(self, textvariable=symbol)
@@ -453,7 +451,11 @@ try:
 				# current_datetime = current_datetime[:-3]
 				# current_datetime = dt.datetime.strptime(current_datetime,'%Y-%m-%d %H:%M:%S.%f')
 
-				print(f'next market open: {market_next_open_datetime}, next market close: {market_close_datetime}, current datetime: {current_datetime}')
+				print()
+				print(f'next market open: {market_next_open_datetime}')
+				print(f'next market close: {market_close_datetime}')
+				print(f'current datetime: {current_datetime}')
+				print()
 
 				if (current_datetime > market_close_datetime) and (current_datetime < market_next_open_datetime):
 				  market_open = False
@@ -714,6 +716,12 @@ try:
 				print(f'% of portfolio in crypto: {(total_crypto_equity/total_equity)*100:.2f}%')
 				print(f'% of portfolio in options collateral: {(total_options_collat/total_equity)*100:.2f}%')
 
+				total_equity = float(r.account.load_phoenix_account()['total_equity']['amount'])
+				print(f'Portfolio balance: ${total_equity:.2f}')
+				try: previous_close = float(r.account.load_phoenix_account()['portfolio_previous_close']['amount'])
+				except Exception as e: print(f'previous_close error: {e}')
+				print(f"Today's profit: ${total_equity - previous_close:.2f}")
+
 				# take the data 
 				# lst = [(1,'Raj','Mumbai',19), 
 				# 	   (2,'Aaryan','Pune',18), 
@@ -863,9 +871,9 @@ try:
 				# print(transfer_datetimes_list)
 				# '2021-02-17T14:59:49.452230Z'
 				transfer_datetimes_list_cleaned = []
-				for datetime in transfer_datetimes_list:
-					datetime = datetime.split('T')[0]
-					transfer_datetimes_list_cleaned.append(datetime)
+				for transfer_datetime in transfer_datetimes_list:
+					transfer_datetime = transfer_datetime.split('T')[0]
+					transfer_datetimes_list_cleaned.append(transfer_datetime)
 					# print(transfer_datetimes_list_cleaned)
 
 				historical_transfer_dates = [dt.datetime.strptime(datetime,'%Y-%m-%d') for datetime in transfer_datetimes_list_cleaned]
@@ -874,15 +882,11 @@ try:
 
 				print(symbol.get())
 				print(interval, span, bounds)
-				label = Label( self , text = " " ) 
-				#label.pack()
-				
-				label.config( text = symbol.get().upper(), font=LARGE_FONT)
-
-				label.configure(background="black", fg='white')
+				ticker_label = Label(self, text=symbol.get().upper(), font=LARGE_FONT, background="black", fg='white')
+				#ticker_label.configure()
 				# label.pack(pady=10,padx=10)
+				ticker_label.grid(column=5, row=0, sticky='nsew', padx=5, pady=0)
 
-				label.grid(column=5, row=0, sticky='nsew', padx=0, pady=0)
 				#label.config( text = interval_var.get() )
 				interval = interval_var.get()
 				span = span_var.get()
@@ -937,62 +941,132 @@ try:
 				# plt.xlabel('Date')
 				# plt.show()
 
+				################################################### END OF PORTFOLIO BALANCES ####################################################
+
+				global last_symbol
+				try: last_symbol
+				except: last_symbol = symbol.get()
+
+				global last_interval
+				try: last_interval
+				except: last_interval = interval
+
+				global last_span
+				try: last_span
+				except: last_span = span
+
 				if symbol.get() != '':
+
+					current_datetime = dt.datetime.now()
+
+					if interval == "5minute":
+						interval_int = 5
+					elif interval == "10minute":
+						interval_int = 10
+					elif interval == "hour":
+						interval_int = 60
+					elif interval == "day":
+						interval_int = 60*24
+					elif interval == "week":
+						interval_int = (60*24)*7
+	
+					global last_datetime
+					try: last_datetime
+					except: last_datetime = current_datetime
+					global interval_passed
+					try: interval_passed
+					except: interval_passed = current_datetime
 					
-					try:
-						historical_security = r.crypto.get_crypto_historicals(symbol.get(), interval=interval, span=span, bounds='24_7', info=info) 
-					# except Exception as e:
-						# if 'Not found for url' in str(e):
-					except TypeError:
+					print()
+					print(f'Current datetime: {current_datetime}')
+					print(f'last_datetime: {last_datetime}')
+					print(f'interval_passed: {interval_passed}')
+					print()
 
-						if span == 'day':
-							historical_security = r.get_stock_historicals(symbol.get(), interval=interval, span=span, bounds='extended', info=info) ###### could change info to close_equity
-						else:
-							historical_security = r.get_stock_historicals(symbol.get(), interval=interval, span=span, bounds='regular', info=info)
-		
+					if (current_datetime > interval_passed or (symbol.get() != last_symbol) or (interval != last_interval) or (span != last_span)) or not already_got_options:
+						last_datetime = current_datetime
+						interval_passed = last_datetime + dt.timedelta(minutes=interval_int)
+						last_symbol = symbol.get()
+						last_interval = interval
+						last_span = span
+						try:
+							historical_security = r.crypto.get_crypto_historicals(symbol.get(), interval=interval, span=span, bounds='24_7', info=info) 
+						# except Exception as e:
+							# if 'Not found for url' in str(e):
+						except TypeError:
 
-					# display(historical_portfolio)
-					#print(historical_portfolio[0])
-				
-					#input()
-					close_prices_list = []
-					dates_list = []
+							if span == 'day':
+								historical_security = r.get_stock_historicals(symbol.get(), interval=interval, span=span, bounds='extended', info=info) ###### could change info to close_equity
+							else:
+								historical_security = r.get_stock_historicals(symbol.get(), interval=interval, span=span, bounds='regular', info=info)
 
-					for candle in historical_security:
-						close_price = float(candle['close_price'])
-						close_prices_list.append(close_price)
-						date = candle['begins_at']
-						dates_list.append(date)
-				
-			##		dates = []
-			##		close_equity_list = []
-			##		open_equity_list = []
-			##	 
-			##		for data_point in historical_portfolio:
-			##			# print(data_point)
-			##			dates.append(data_point['begins_at'])
-			##			close_equity_list.append(float(data_point['close_equity'])) # close_price
-			##			open_equity_list.append(float(data_point['open_equity'])) # open_price
-			 
-					# input(dates)
-					# change the dates into a format that matplotlib can recognize.
-					print(dates_list)
-					dates_list = [dt.datetime.strptime(d,'%Y-%m-%dT%H:%M:%SZ') for d in dates_list]
-					print(dates_list)
-					#input()
+							
 					
-					graph1.clear()
-					print('plotting graph')
-					graph1.plot(dates_list, close_prices_list)
+
+						# display(historical_portfolio)
+						#print(historical_portfolio[0])
+					
+						#input()
+						close_prices_list = []
+						dates_list = []
+
+						for candle in historical_security:
+							close_price = float(candle['close_price'])
+							close_prices_list.append(close_price)
+							date = candle['begins_at']
+							dates_list.append(date)
+					
+				##		dates = []
+				##		close_equity_list = []
+				##		open_equity_list = []
+				##	 
+				##		for data_point in historical_portfolio:
+				##			# print(data_point)
+				##			dates.append(data_point['begins_at'])
+				##			close_equity_list.append(float(data_point['close_equity'])) # close_price
+				##			open_equity_list.append(float(data_point['open_equity'])) # open_price
+				 
+						# input(dates)
+						# change the dates into a format that matplotlib can recognize.
+						# print(dates_list)
+						dates_list = [dt.datetime.strptime(d,'%Y-%m-%dT%H:%M:%SZ') for d in dates_list]
+						# print(dates_list)
+						#input()
+
+						ticker_price_label = f'${close_prices_list[-1]:,.2f}' # the :, adds thousands separation, .2f truncates to the cent
+						ticker_price_label = Label(self, text=ticker_price_label, font=('Verdana', 15), background='black', fg='white')
+						ticker_price_label.grid(column=6, row=0, sticky='nsew', padx=0, pady=0) 
+						
+						graph1.clear()
+						print('plotting graph')
+						graph1.plot(dates_list, close_prices_list)
+				else: print('No new graph data')
+
+				portfolio_balance_text_label = Label(self, text="Portfolio Balance: ", font=LARGE_FONT, background="black", fg='white') 
+				portfolio_balance_text_label.grid(column=12, row=0, sticky='nsew', padx=0, pady=0)
 				
-				f2 = Figure(figsize=(3,3), dpi=100)
+				# portfolio_balance_text = f'${close_equity_list[-1]:,.2f}'
+				cash_balances = r.account.load_phoenix_account()
+				total_equity = float(cash_balances['total_equity']['amount'])
+				portfolio_balance_text = f"${total_equity:,.2f}"
+				portfolio_balance_label = Label(self, text=portfolio_balance_text, font=LARGE_FONT, background='black', fg='white')
+				portfolio_balance_label.grid(column=13, row=0, sticky='nsew', padx=0, pady=0) 
+
+				global figure2
+				try: figure2
+				except: figure2 = Figure(figsize=(3,3), dpi=100)
 				
-				a = f2.add_subplot(111)
+				global graph2
+				try: graph2
+				except: graph2 = figure2.add_subplot(111)
 				
 				# a.plot(dates, close_equity_list)
-				a.plot(portfolio_balance_dates_df['running balance'])
+
+				# a.plot(portfolio_balance_dates_df['running balance'])
+				graph2.clear()
+				graph2.plot(close_equity_list)
 				
-				canvas2 = FigureCanvasTkAgg(f2, self)
+				canvas2 = FigureCanvasTkAgg(figure2, self)
 				
 				canvas2.get_tk_widget().grid(column=10, row=1, sticky='nsew', padx=0, pady=0, columnspan=10)#.place(relx=1,rely=0.100)
 				# toolbar_frame2 = tk.Frame(self)
@@ -1045,7 +1119,7 @@ try:
 			span_var = StringVar()
 			  
 			# initial menu text 
-			interval_var.set('hour') 
+			interval_var.set('5minute') 
 			span_var.set('day')
 			  
 			# Create Dropdown menu 
@@ -1103,8 +1177,9 @@ try:
 	app = SeaofBTCapp()
 	# minutes = 4
 	# ani = animation.FuncAnimation(f, animate, interval=(minutes*60)*1000)
-	seconds = 20
+	seconds = 45
 	ani = animation.FuncAnimation(f, animate, interval=seconds*1000)
 	app.mainloop()
+
 except KeyboardInterrupt:
 	options_df.to_csv('options_positions_data.csv')
